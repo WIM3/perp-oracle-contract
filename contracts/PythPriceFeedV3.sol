@@ -3,7 +3,7 @@ pragma solidity 0.7.6;
 
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
+import { AggregatorV3Interface } from "./PythAggregatorV3.sol";
 import { IChainlinkPriceFeed } from "./interface/IChainlinkPriceFeed.sol";
 import { IPriceFeed } from "./interface/IPriceFeed.sol";
 import { IChainlinkPriceFeedV3 } from "./interface/IChainlinkPriceFeedV3.sol";
@@ -11,7 +11,7 @@ import { IPriceFeedUpdate } from "./interface/IPriceFeedUpdate.sol";
 import { BlockContext } from "./base/BlockContext.sol";
 import { CachedTwap } from "./twap/CachedTwap.sol";
 
-contract ChainlinkPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate, BlockContext, CachedTwap {
+contract PythPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate, BlockContext, CachedTwap {
     using SafeMath for uint256;
     using Address for address;
 
