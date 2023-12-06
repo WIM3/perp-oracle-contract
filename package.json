@@ -87,5 +87,10 @@
       "prettier --write",
       "solhint"
     ]
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-evm-js": "^1.29.2",
+    "@pythnetwork/pyth-sdk-js": "^1.2.0",
+    "@pythnetwork/pyth-sdk-solidity": "^2.3.0"
   }
 }
