@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 import { BlockContext } from "./base/BlockContext.sol";
@@ -12,12 +11,11 @@ import { UniswapV3PriceFeed } from "./UniswapV3PriceFeed.sol";
 import { PythPriceFeedV3 } from "./PythPriceFeedV3.sol";
 
 contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, BlockContext {
-    using SafeMath for uint256;
     using Address for address;
 
     uint8 private constant _DECIMALS = 18;
 
-    Status internal _status = Status.Chainlink;
+    Status internal _status = Status.Pyth;
     UniswapV3PriceFeed internal _uniswapV3PriceFeed;
     PythPriceFeedV3 internal immutable _pythPriceFeedV3;
 
@@ -25,9 +23,9 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
     // EXTERNAL NON-VIEW
     //
 
-    constructor(address pythPriceFeedV3) {
+    constructor(address pythPriceFeedV3) Ownable() {
         // PFD_CNC: ChainlinkPriceFeed is not contract
-        require(PythPriceFeedV3.isContract(), "PFD_CNC");
+        require(pythPriceFeedV3.isContract(), "PFD_CNC");
 
         _pythPriceFeedV3 = PythPriceFeedV3(pythPriceFeedV3);
     }
@@ -114,7 +112,7 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
 
         return
             fromDecimals > toDecimals
-                ? value.div(10**(fromDecimals - toDecimals))
-                : value.mul(10**(toDecimals - fromDecimals));
+                ? value / (10 ** (fromDecimals - toDecimals))
+                : value * (10 ** (toDecimals - fromDecimals));
     }
 }

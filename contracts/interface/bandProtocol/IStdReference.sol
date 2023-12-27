@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 // Copy from https://docs.bandchain.org/band-standard-dataset/using-band-dataset/using-band-dataset-evm.html
@@ -15,8 +15,8 @@ interface IStdReference {
     function getReferenceData(string memory _base, string memory _quote) external view returns (ReferenceData memory);
 
     /// Similar to getReferenceData, but with multiple base/quote pairs at once.
-    function getReferenceDataBulk(string[] memory _bases, string[] memory _quotes)
-        external
-        view
-        returns (ReferenceData[] memory);
+    function getReferenceDataBulk(
+        string[] memory _bases,
+        string[] memory _quotes
+    ) external view returns (ReferenceData[] memory);
 }

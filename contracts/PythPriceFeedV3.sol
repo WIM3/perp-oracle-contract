@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-import { AggregatorV3Interface } from "./PythAggregatorV3.sol";
+import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 import { IChainlinkPriceFeed } from "./interface/IChainlinkPriceFeed.sol";
 import { IPriceFeed } from "./interface/IPriceFeed.sol";
 import { IChainlinkPriceFeedV3 } from "./interface/IChainlinkPriceFeedV3.sol";
 import { IPriceFeedUpdate } from "./interface/IPriceFeedUpdate.sol";
 import { BlockContext } from "./base/BlockContext.sol";
 import { CachedTwap } from "./twap/CachedTwap.sol";
+import "hardhat/console.sol";
 
 contract PythPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate, BlockContext, CachedTwap {
-    using SafeMath for uint256;
     using Address for address;
 
     //
@@ -29,11 +28,7 @@ contract PythPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate,
     // EXTERNAL NON-VIEW
     //
 
-    constructor(
-        AggregatorV3Interface aggregator,
-        uint256 timeout,
-        uint80 twapInterval
-    ) CachedTwap(twapInterval) {
+    constructor(AggregatorV3Interface aggregator, uint256 timeout, uint80 twapInterval) CachedTwap(twapInterval) {
         // CPF_ANC: Aggregator is not contract
         require(address(aggregator).isContract(), "CPF_ANC");
         _aggregator = aggregator;
@@ -100,7 +95,7 @@ contract PythPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate,
         // Fetch the latest timstamp instead of _lastValidTimestamp is to prevent stale data
         // when the update() doesn't get triggered.
         (, uint256 lastestValidTimestamp) = _getLatestOrCachedPrice();
-        return lastestValidTimestamp > 0 && lastestValidTimestamp.add(_timeout) < _blockTimestamp();
+        return lastestValidTimestamp > 0 && lastestValidTimestamp + _timeout < _blockTimestamp();
     }
 
     /// @inheritdoc IChainlinkPriceFeedV3
@@ -153,6 +148,7 @@ contract PythPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate,
         }
 
         FreezedReason freezedReason = _getFreezedReason(response);
+        
         if (_isNotFreezed(freezedReason)) {
             return (uint256(response.answer), response.updatedAt);
         }
@@ -212,7 +208,6 @@ contract PythPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate,
         if (response.answer <= 0) {
             return FreezedReason.NonPositiveAnswer;
         }
-
         return FreezedReason.NotFreezed;
     }
 
