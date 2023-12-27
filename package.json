@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/perpetual-protocol/perp-oracle-contract.git"
+    "url": "https://github.com/WIM3/perp-oracle-contract.git"
   },
   "homepage": "https://perp.com/",
   "keywords": [
