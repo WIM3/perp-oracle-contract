@@ -4,17 +4,17 @@ import chai, { expect } from "chai"
 import { parseEther } from "ethers/lib/utils"
 import { ethers, waffle } from "hardhat"
 import {
-    ChainlinkPriceFeedV3,
-    ChainlinkPriceFeedV3__factory,
+    PythPriceFeedV3,
+    PythPriceFeedV3__factory,
     PriceFeedUpdater,
-    TestAggregatorV3__factory,
+    MockAggregatorV3__factory,
 } from "../typechain"
 
 chai.use(smock.matchers)
 
 interface PriceFeedUpdaterFixture {
-    ethPriceFeed: MockContract<ChainlinkPriceFeedV3>
-    btcPriceFeed: MockContract<ChainlinkPriceFeedV3>
+    ethPriceFeed: MockContract<PythPriceFeedV3>
+    btcPriceFeed: MockContract<PythPriceFeedV3>
     priceFeedUpdater: PriceFeedUpdater
     admin: SignerWithAddress
     alice: SignerWithAddress
@@ -44,11 +44,11 @@ describe("PriceFeedUpdater Spec", () => {
     async function createFixture(): Promise<PriceFeedUpdaterFixture> {
         const [admin, alice] = await ethers.getSigners()
 
-        const aggregatorFactory = await smock.mock<TestAggregatorV3__factory>("TestAggregatorV3", admin)
+        const aggregatorFactory = await smock.mock<MockAggregatorV3__factory>("MockAggregatorV3", admin)
         const aggregator = await aggregatorFactory.deploy()
 
-        const chainlinkPriceFeedV2Factory = await smock.mock<ChainlinkPriceFeedV3__factory>(
-            "ChainlinkPriceFeedV3",
+        const chainlinkPriceFeedV2Factory = await smock.mock<PythPriceFeedV3__factory>(
+            "PythPriceFeedV3",
             admin,
         )
         const ethPriceFeed = await chainlinkPriceFeedV2Factory.deploy(aggregator.address, 40 * 60, 30 * 60)

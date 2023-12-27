@@ -1,4 +1,4 @@
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import { TestAggregatorV3 } from "../../contracts/test/TestAggregatorV3.sol";
@@ -9,13 +9,7 @@ contract AggregatorV3Broken is TestAggregatorV3 {
         external
         view
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         revert();
     }

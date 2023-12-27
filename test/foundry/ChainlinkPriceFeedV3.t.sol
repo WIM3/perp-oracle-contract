@@ -1,4 +1,4 @@
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
@@ -71,11 +71,7 @@ contract ChainlinkPriceFeedV3Common is IChainlinkPriceFeedV3Event, Setup {
         assertEq(_chainlinkPriceFeedV3Broken.getPrice(interval), price);
     }
 
-    function _mock_call_latestRoundData(
-        uint256 roundId,
-        int256 answer,
-        uint256 timestamp
-    ) internal {
+    function _mock_call_latestRoundData(uint256 roundId, int256 answer, uint256 timestamp) internal {
         vm.mockCall(
             address(_testAggregator),
             abi.encodeWithSelector(_testAggregator.latestRoundData.selector),

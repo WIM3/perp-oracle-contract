@@ -1,4 +1,4 @@
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import { CumulativeTwap } from "../../contracts/twap/CumulativeTwap.sol";
@@ -79,8 +79,9 @@ contract CumulativeTwapUpdateTest is CumulativeTwapSetup {
 
         uint256 observationIndex1 = _testCumulativeTwap.currentObservationIndex();
 
-        (uint256 price1, uint256 priceCumulative1, uint256 timestamp1) =
-            _testCumulativeTwap.observations(observationIndex1);
+        (uint256 price1, uint256 priceCumulative1, uint256 timestamp1) = _testCumulativeTwap.observations(
+            observationIndex1
+        );
 
         assertTrue(result1);
         assertEq(observationIndex1, 0);
@@ -96,8 +97,9 @@ contract CumulativeTwapUpdateTest is CumulativeTwapSetup {
 
         uint256 observationIndex2 = _testCumulativeTwap.currentObservationIndex();
 
-        (uint256 price2, uint256 priceCumulative2, uint256 timestamp2) =
-            _testCumulativeTwap.observations(observationIndex2);
+        (uint256 price2, uint256 priceCumulative2, uint256 timestamp2) = _testCumulativeTwap.observations(
+            observationIndex2
+        );
 
         assertTrue(result2);
         assertEq(observationIndex2, 1);
@@ -123,15 +125,16 @@ contract CumulativeTwapUpdateTest is CumulativeTwapSetup {
         assertEq(_testCumulativeTwap.update(p1, t1), true);
 
         uint256 latestObservationIndex = _testCumulativeTwap.currentObservationIndex();
-        (uint256 priceBefore, uint256 priceCumulativeBefore, uint256 timestampBefore) =
-            _testCumulativeTwap.observations(latestObservationIndex);
+        (uint256 priceBefore, uint256 priceCumulativeBefore, uint256 timestampBefore) = _testCumulativeTwap
+            .observations(latestObservationIndex);
 
         // second update won't update
         assertEq(_testCumulativeTwap.update(p1, t1 + 10), false);
         assertEq(_testCumulativeTwap.currentObservationIndex(), latestObservationIndex);
 
-        (uint256 priceAfter, uint256 priceCumulativeAfter, uint256 timestampAfter) =
-            _testCumulativeTwap.observations(latestObservationIndex);
+        (uint256 priceAfter, uint256 priceCumulativeAfter, uint256 timestampAfter) = _testCumulativeTwap.observations(
+            latestObservationIndex
+        );
         assertEq(priceBefore, priceAfter);
         assertEq(priceCumulativeBefore, priceCumulativeAfter);
         assertEq(timestampBefore, timestampAfter);
@@ -145,15 +148,16 @@ contract CumulativeTwapUpdateTest is CumulativeTwapSetup {
         assertEq(_testCumulativeTwap.update(p1, t1), true);
 
         uint256 latestObservationIndex = _testCumulativeTwap.currentObservationIndex();
-        (uint256 priceBefore, uint256 priceCumulativeBefore, uint256 timestampBefore) =
-            _testCumulativeTwap.observations(latestObservationIndex);
+        (uint256 priceBefore, uint256 priceCumulativeBefore, uint256 timestampBefore) = _testCumulativeTwap
+            .observations(latestObservationIndex);
 
         // second update won't update
         assertEq(_testCumulativeTwap.update(p1, t1), false);
         assertEq(_testCumulativeTwap.currentObservationIndex(), latestObservationIndex);
 
-        (uint256 priceAfter, uint256 priceCumulativeAfter, uint256 timestampAfter) =
-            _testCumulativeTwap.observations(latestObservationIndex);
+        (uint256 priceAfter, uint256 priceCumulativeAfter, uint256 timestampAfter) = _testCumulativeTwap.observations(
+            latestObservationIndex
+        );
         assertEq(priceBefore, priceAfter);
         assertEq(priceCumulativeBefore, priceCumulativeAfter);
         assertEq(timestampBefore, timestampAfter);
@@ -269,8 +273,9 @@ contract CumulativeTwapRingBufferTest is CumulativeTwapCalculateTwapBase {
     function test_calculateTwap_when_index_hasnt_get_rotated() public {
         // last filled up index
         assertEq(_testCumulativeTwap.currentObservationIndex(), observationLength - 2);
-        (uint256 pricePrev, uint256 priceCumulativePrev, uint256 _) =
-            _testCumulativeTwap.observations(observationLength - 3);
+        (uint256 pricePrev, uint256 priceCumulativePrev, uint256 _) = _testCumulativeTwap.observations(
+            observationLength - 3
+        );
         _isObservationEqualTo(
             observationLength - 2,
             2198, // _BEGIN_PRICE + observationLength - 2 = 400 + 1798
