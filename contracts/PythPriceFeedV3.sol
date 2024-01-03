@@ -9,11 +9,10 @@ import { IChainlinkPriceFeedV3 } from "./interface/IChainlinkPriceFeedV3.sol";
 import { IPriceFeedUpdate } from "./interface/IPriceFeedUpdate.sol";
 import { BlockContext } from "./base/BlockContext.sol";
 import { CachedTwap } from "./twap/CachedTwap.sol";
-import "hardhat/console.sol";
+import { UD60x18, ud } from "@prb/math/src/UD60x18.sol";
 
 contract PythPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate, BlockContext, CachedTwap {
     using Address for address;
-
     //
     // STATE
     //
@@ -82,7 +81,7 @@ contract PythPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate,
             return latestValidPrice;
         }
 
-        return _getCachedTwap(interval, latestValidPrice, latestValidTime);
+        return ud(_getCachedTwap(interval, latestValidPrice, latestValidTime)).log2().intoUint256();
     }
 
     /// @inheritdoc IChainlinkPriceFeedV3
