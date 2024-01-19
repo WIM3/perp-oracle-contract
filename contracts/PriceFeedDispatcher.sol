@@ -9,11 +9,13 @@ import { IPriceFeed } from "./interface/IPriceFeed.sol";
 import { IPriceFeedDispatcher } from "./interface/IPriceFeedDispatcher.sol";
 import { UniswapV3PriceFeed } from "./UniswapV3PriceFeed.sol";
 import { PythPriceFeedV3 } from "./PythPriceFeedV3.sol";
+import { UD60x18, ud } from "@prb/math/src/UD60x18.sol";
 
 contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, BlockContext {
     using Address for address;
 
     uint8 private constant _DECIMALS = 18;
+    uint256 SCALE = 10**12;
 
     Status internal _status = Status.Pyth;
     UniswapV3PriceFeed internal _uniswapV3PriceFeed;
@@ -58,7 +60,12 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
 
     /// @inheritdoc IPriceFeed
     function getPrice(uint256 interval) external view override returns (uint256) {
-        return getDispatchedPrice(interval);
+        uint256 value = getDispatchedPrice(interval);
+        uint256 scaledVal;
+        unchecked {
+            scaledVal = uint256(int256(value)) * SCALE;
+        }
+        return ud(scaledVal).log2().intoUint256();
     }
 
     /// @inheritdoc IPriceFeedDispatcher
