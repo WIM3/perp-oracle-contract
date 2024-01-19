@@ -32,7 +32,8 @@ contract PythPriceFeedV3 is IPriceFeed, IChainlinkPriceFeedV3, IPriceFeedUpdate,
         _aggregator = aggregator;
 
         _timeout = timeout;
-        _decimals = aggregator.decimals();
+        // this need to be changed later to _aggregator.decimals();
+        _decimals = 8;
     }
 
     /// @inheritdoc IPriceFeedUpdate
