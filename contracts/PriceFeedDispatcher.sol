@@ -60,12 +60,7 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
 
     /// @inheritdoc IPriceFeed
     function getPrice(uint256 interval) external view override returns (uint256) {
-        uint256 value = getDispatchedPrice(interval);
-        uint256 scaledVal;
-        unchecked {
-            scaledVal = uint256(int256(value)) * SCALE;
-        }
-        return ud(scaledVal).log2().intoUint256();
+        return getDispatchedPrice(interval);
     }
 
     /// @inheritdoc IPriceFeedDispatcher
@@ -94,10 +89,10 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
     /// @inheritdoc IPriceFeedDispatcher
     function getDispatchedPrice(uint256 interval) public view override returns (uint256) {
         if (isToUseUniswapV3PriceFeed()) {
-            return _formatFromDecimalsToX10_18(_uniswapV3PriceFeed.getPrice(), _uniswapV3PriceFeed.decimals());
+            return _getLog(_formatFromDecimalsToX10_18(_uniswapV3PriceFeed.getPrice(), _uniswapV3PriceFeed.decimals()));
         }
 
-        return _formatFromDecimalsToX10_18(_pythPriceFeedV3.getPrice(interval), _pythPriceFeedV3.decimals());
+        return _getLog(_formatFromDecimalsToX10_18(_pythPriceFeedV3.getPrice(interval), _pythPriceFeedV3.decimals()));
     }
 
     function isToUseUniswapV3PriceFeed() public view returns (bool) {
@@ -109,6 +104,10 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
     //
     // INTERNAL
     //
+
+    function _getLog(uint256 value) internal pure returns (uint256){
+        return ud(value).log2().intoUint256();
+    }
 
     function _formatFromDecimalsToX10_18(uint256 value, uint8 fromDecimals) internal pure returns (uint256) {
         uint8 toDecimals = _DECIMALS;
