@@ -1,35 +1,35 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 import { BlockContext } from "./base/BlockContext.sol";
 import { IPriceFeed } from "./interface/IPriceFeed.sol";
 import { IPriceFeedDispatcher } from "./interface/IPriceFeedDispatcher.sol";
 import { UniswapV3PriceFeed } from "./UniswapV3PriceFeed.sol";
-import { ChainlinkPriceFeedV3 } from "./ChainlinkPriceFeedV3.sol";
+import { PythPriceFeedV3 } from "./PythPriceFeedV3.sol";
+import { UD60x18, ud } from "@prb/math/src/UD60x18.sol";
 
 contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, BlockContext {
-    using SafeMath for uint256;
     using Address for address;
 
     uint8 private constant _DECIMALS = 18;
+    uint256 SCALE = 10**12;
 
-    Status internal _status = Status.Chainlink;
+    Status internal _status = Status.Pyth;
     UniswapV3PriceFeed internal _uniswapV3PriceFeed;
-    ChainlinkPriceFeedV3 internal immutable _chainlinkPriceFeedV3;
+    PythPriceFeedV3 internal immutable _pythPriceFeedV3;
 
     //
     // EXTERNAL NON-VIEW
     //
 
-    constructor(address chainlinkPriceFeedV3) {
+    constructor(address pythPriceFeedV3) Ownable() {
         // PFD_CNC: ChainlinkPriceFeed is not contract
-        require(chainlinkPriceFeedV3.isContract(), "PFD_CNC");
+        require(pythPriceFeedV3.isContract(), "PFD_CNC");
 
-        _chainlinkPriceFeedV3 = ChainlinkPriceFeedV3(chainlinkPriceFeedV3);
+        _pythPriceFeedV3 = PythPriceFeedV3(pythPriceFeedV3);
     }
 
     /// @inheritdoc IPriceFeedDispatcher
@@ -42,7 +42,7 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
             return;
         }
 
-        _chainlinkPriceFeedV3.cacheTwap(interval);
+        _pythPriceFeedV3.cacheTwap(interval);
     }
 
     /// @dev can only be initialized once by the owner
@@ -64,8 +64,8 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
     }
 
     /// @inheritdoc IPriceFeedDispatcher
-    function getChainlinkPriceFeedV3() external view override returns (address) {
-        return address(_chainlinkPriceFeedV3);
+    function getPythPriceFeedV3() external view override returns (address) {
+        return address(_pythPriceFeedV3);
     }
 
     /// @inheritdoc IPriceFeedDispatcher
@@ -89,21 +89,25 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
     /// @inheritdoc IPriceFeedDispatcher
     function getDispatchedPrice(uint256 interval) public view override returns (uint256) {
         if (isToUseUniswapV3PriceFeed()) {
-            return _formatFromDecimalsToX10_18(_uniswapV3PriceFeed.getPrice(), _uniswapV3PriceFeed.decimals());
+            return _getLog(_formatFromDecimalsToX10_18(_uniswapV3PriceFeed.getPrice(), _uniswapV3PriceFeed.decimals()));
         }
 
-        return _formatFromDecimalsToX10_18(_chainlinkPriceFeedV3.getPrice(interval), _chainlinkPriceFeedV3.decimals());
+        return _getLog(_formatFromDecimalsToX10_18(_pythPriceFeedV3.getPrice(interval), _pythPriceFeedV3.decimals()));
     }
 
     function isToUseUniswapV3PriceFeed() public view returns (bool) {
         return
             address(_uniswapV3PriceFeed) != address(0) &&
-            (_chainlinkPriceFeedV3.isTimedOut() || _status == Status.UniswapV3);
+            (_pythPriceFeedV3.isTimedOut() || _status == Status.UniswapV3);
     }
 
     //
     // INTERNAL
     //
+
+    function _getLog(uint256 value) internal pure returns (uint256){
+        return ud(value).log2().intoUint256();
+    }
 
     function _formatFromDecimalsToX10_18(uint256 value, uint8 fromDecimals) internal pure returns (uint256) {
         uint8 toDecimals = _DECIMALS;
@@ -114,7 +118,7 @@ contract PriceFeedDispatcher is IPriceFeed, IPriceFeedDispatcher, Ownable, Block
 
         return
             fromDecimals > toDecimals
-                ? value.div(10**(fromDecimals - toDecimals))
-                : value.mul(10**(toDecimals - fromDecimals));
+                ? value / (10 ** (fromDecimals - toDecimals))
+                : value * (10 ** (toDecimals - fromDecimals));
     }
 }

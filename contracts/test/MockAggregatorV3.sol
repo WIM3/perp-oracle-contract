@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
-contract TestAggregatorV3 is AggregatorV3Interface {
+contract MockAggregatorV3 is AggregatorV3Interface {
     struct RoundData {
         int256 answer;
         uint256 startedAt;
@@ -45,17 +45,13 @@ contract TestAggregatorV3 is AggregatorV3Interface {
         latestRound = roundId;
     }
 
-    function getRoundData(uint80 _roundId)
+    function getRoundData(
+        uint80 _roundId
+    )
         external
         view
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         return (
             _roundId,
@@ -71,13 +67,7 @@ contract TestAggregatorV3 is AggregatorV3Interface {
         view
         virtual
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         return (
             latestRound,

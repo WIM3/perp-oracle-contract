@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import { BlockContext } from "../base/BlockContext.sol";
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract CumulativeTwap is BlockContext {
-    using SafeMath for uint256;
-
     //
     // STRUCT
     //
@@ -90,12 +87,10 @@ contract CumulativeTwap is BlockContext {
         }
 
         uint256 currentTimestamp = _blockTimestamp();
-        uint256 targetTimestamp = currentTimestamp.sub(interval);
-        uint256 currentCumulativePrice =
-            latestObservation.priceCumulative.add(
-                (latestObservation.price.mul(latestUpdatedTimestamp.sub(latestObservation.timestamp))).add(
-                    price.mul(currentTimestamp.sub(latestUpdatedTimestamp))
-                )
+        uint256 targetTimestamp = currentTimestamp - interval;
+        uint256 currentCumulativePrice = latestObservation.priceCumulative +
+            (latestObservation.price * (latestUpdatedTimestamp - latestObservation.timestamp)) + (
+                price * (currentTimestamp-latestUpdatedTimestamp)
             );
 
         // case 1
@@ -144,22 +139,17 @@ contract CumulativeTwap is BlockContext {
                 uint256 targetTimeDelta = targetTimestamp - beforeOrAt.timestamp;
                 uint256 observationTimeDelta = atOrAfter.timestamp - beforeOrAt.timestamp;
 
-                targetCumulativePrice = beforeOrAt.priceCumulative.add(
-                    ((atOrAfter.priceCumulative.sub(beforeOrAt.priceCumulative)).mul(targetTimeDelta)).div(
-                        observationTimeDelta
-                    )
-                );
+                targetCumulativePrice = beforeOrAt.priceCumulative + (
+                  ((atOrAfter.priceCumulative - beforeOrAt.priceCumulative) * targetTimeDelta) / observationTimeDelta);
             }
         }
 
-        return currentCumulativePrice.sub(targetCumulativePrice).div(interval);
+        return currentCumulativePrice - targetCumulativePrice / interval;
     }
 
-    function _getSurroundingObservations(uint256 targetTimestamp)
-        internal
-        view
-        returns (Observation memory beforeOrAt, Observation memory atOrAfter)
-    {
+    function _getSurroundingObservations(
+        uint256 targetTimestamp
+    ) internal view returns (Observation memory beforeOrAt, Observation memory atOrAfter) {
         beforeOrAt = observations[currentObservationIndex];
 
         // if the target is chronologically at or after the newest observation, we can early return
@@ -187,11 +177,9 @@ contract CumulativeTwap is BlockContext {
         return _binarySearch(targetTimestamp);
     }
 
-    function _binarySearch(uint256 targetTimestamp)
-        private
-        view
-        returns (Observation memory beforeOrAt, Observation memory atOrAfter)
-    {
+    function _binarySearch(
+        uint256 targetTimestamp
+    ) private view returns (Observation memory beforeOrAt, Observation memory atOrAfter) {
         uint256 l = (currentObservationIndex + 1) % MAX_OBSERVATION; // oldest observation
         uint256 r = l + MAX_OBSERVATION - 1; // newest observation
         uint256 i;

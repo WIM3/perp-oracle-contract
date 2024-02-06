@@ -1,4 +1,4 @@
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import { IUniswapV3PriceFeed } from "../../contracts/interface/IUniswapV3PriceFeed.sol";

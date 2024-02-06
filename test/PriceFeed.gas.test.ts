@@ -1,6 +1,6 @@
 import { parseEther } from "ethers/lib/utils"
 import { ethers, waffle } from "hardhat"
-import { BandPriceFeed, ChainlinkPriceFeedV2, TestAggregatorV3, TestPriceFeedV2, TestStdReference } from "../typechain"
+import { BandPriceFeed, PythPriceFeedV3, MockAggregatorV3, TestPriceFeedV2, TestStdReference } from "../typechain"
 
 const twapInterval = 900
 interface PriceFeedFixture {
@@ -8,8 +8,8 @@ interface PriceFeedFixture {
     bandReference: TestStdReference
     baseAsset: string
 
-    chainlinkPriceFeed: ChainlinkPriceFeedV2
-    aggregator: TestAggregatorV3
+    pythPriceFeed: PythPriceFeedV3
+    aggregator: MockAggregatorV3
 }
 
 async function priceFeedFixture(): Promise<PriceFeedFixture> {
@@ -26,16 +26,18 @@ async function priceFeedFixture(): Promise<PriceFeedFixture> {
     )) as BandPriceFeed
 
     // chainlink
-    const testAggregatorFactory = await ethers.getContractFactory("TestAggregatorV3")
+    const testAggregatorFactory = await ethers.getContractFactory("MockAggregatorV3")
     const testAggregator = await testAggregatorFactory.deploy()
 
-    const chainlinkPriceFeedFactory = await ethers.getContractFactory("ChainlinkPriceFeedV2")
-    const chainlinkPriceFeed = (await chainlinkPriceFeedFactory.deploy(
+    const pythPriceFeedFactory = await ethers.getContractFactory("PythPriceFeedV3")
+    const fifteenMinutes = 60 * 15
+    const pythPriceFeed = (await pythPriceFeedFactory.deploy(
         testAggregator.address,
         twapInterval,
-    )) as ChainlinkPriceFeedV2
+        fifteenMinutes
+    )) as PythPriceFeedV3
 
-    return { bandPriceFeed, bandReference: testStdReference, baseAsset, chainlinkPriceFeed, aggregator: testAggregator }
+    return { bandPriceFeed, bandReference: testStdReference, baseAsset, pythPriceFeed, aggregator: testAggregator }
 }
 
 describe.skip("Price feed gas test", () => {
@@ -43,8 +45,8 @@ describe.skip("Price feed gas test", () => {
     const loadFixture: ReturnType<typeof waffle.createFixtureLoader> = waffle.createFixtureLoader([admin])
     let bandPriceFeed: BandPriceFeed
     let bandReference: TestStdReference
-    let chainlinkPriceFeed: ChainlinkPriceFeedV2
-    let aggregator: TestAggregatorV3
+    let pythPriceFeed: PythPriceFeedV3
+    let aggregator: MockAggregatorV3
     let currentTime: number
     let testPriceFeed: TestPriceFeedV2
     let beginPrice = 400
@@ -59,7 +61,7 @@ describe.skip("Price feed gas test", () => {
         await bandPriceFeed.update()
 
         await aggregator.setRoundData(round, parseEther(price.toString()), currentTime, currentTime, round)
-        await chainlinkPriceFeed.update()
+        await pythPriceFeed.update()
 
         if (forward) {
             currentTime += 15
@@ -72,13 +74,13 @@ describe.skip("Price feed gas test", () => {
         const _fixture = await loadFixture(priceFeedFixture)
         bandReference = _fixture.bandReference
         bandPriceFeed = _fixture.bandPriceFeed
-        chainlinkPriceFeed = _fixture.chainlinkPriceFeed
+        pythPriceFeed = _fixture.pythPriceFeed
         aggregator = _fixture.aggregator
         round = 0
 
         const TestPriceFeedFactory = await ethers.getContractFactory("TestPriceFeedV2")
         testPriceFeed = (await TestPriceFeedFactory.deploy(
-            chainlinkPriceFeed.address,
+            pythPriceFeed.address,
             bandPriceFeed.address,
         )) as TestPriceFeedV2
 

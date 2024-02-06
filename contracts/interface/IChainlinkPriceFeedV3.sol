@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 interface IChainlinkPriceFeedV3Event {
     /// @param NotFreezed Default state: Chainlink is working as expected
@@ -8,7 +8,14 @@ interface IChainlinkPriceFeedV3Event {
     /// @param NoRoundId Zero round Id
     /// @param InvalidTimestamp No timestamp or it’s invalid, either outdated or in the future
     /// @param NonPositiveAnswer Price is zero or negative
-    enum FreezedReason { NotFreezed, NoResponse, IncorrectDecimals, NoRoundId, InvalidTimestamp, NonPositiveAnswer }
+    enum FreezedReason {
+        NotFreezed,
+        NoResponse,
+        IncorrectDecimals,
+        NoRoundId,
+        InvalidTimestamp,
+        NonPositiveAnswer
+    }
 
     event ChainlinkPriceUpdated(uint256 price, uint256 timestamp, FreezedReason freezedReason);
 }

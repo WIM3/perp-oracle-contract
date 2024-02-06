@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 interface IPriceFeedDispatcherEvent {
-    enum Status { Chainlink, UniswapV3 }
+    enum Status {
+        Pyth,
+        UniswapV3
+    }
     event StatusUpdated(Status status);
     event UniswapV3PriceFeedUpdated(address uniswapV3PriceFeed);
 }
@@ -21,7 +24,7 @@ interface IPriceFeedDispatcher is IPriceFeedDispatcherEvent {
     /// @param interval only useful when using Chainlink; UniswapV3PriceFeed has its own fixed interval
     function getDispatchedPrice(uint256 interval) external view returns (uint256);
 
-    function getChainlinkPriceFeedV3() external view returns (address);
+    function getPythPriceFeedV3() external view returns (address);
 
     function getUniswapV3PriceFeed() external view returns (address);
 
